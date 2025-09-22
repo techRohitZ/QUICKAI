@@ -227,3 +227,5 @@ For support, email support@quickai.com or join our community discussions.
 ---
 
 **QUICKAI** - Empowering creativity with AI 🚀
+
+Live Link: https://quickai-drab.vercel.app/
