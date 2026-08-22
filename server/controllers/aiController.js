@@ -263,7 +263,7 @@ export const generateArticle = async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: prompt,
       config: {
         temperature: 0.7,
@@ -306,7 +306,7 @@ export const generateBlogTitle = async (req, res) => {
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: `Generate catchy and engaging blog titles for the following topic: ${prompt}`,
       config: {
         temperature: 0.7,
@@ -459,7 +459,7 @@ export const resumeReview = async (req, res) => {
     const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume content:\n\n${pdfData.text}`;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3.6-flash",
       contents: prompt,
       config: {
         temperature: 0.7,
