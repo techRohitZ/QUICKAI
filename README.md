@@ -110,8 +110,12 @@ QUICKAI/
 
    **Client `.env`:**
    ```env
+   # For local development
    VITE_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
    VITE_BASE_URL=http://localhost:3000
+   
+   # For production deployment on Vercel, update VITE_BASE_URL to:
+   # VITE_BASE_URL=https://your-server-name.vercel.app
    ```
 
 4. **Database Setup**
@@ -199,6 +203,14 @@ Both client and server are configured for Vercel deployment with `vercel.json` f
 ### Environment Variables for Production
 Make sure to set all required environment variables in your deployment platform.
 
+**Important**: For production deployment, you need to set the `VITE_BASE_URL` environment variable in Vercel to point to your server URL:
+
+1. Go to your Vercel dashboard
+2. Select your project → Settings → Environment Variables
+3. Add: `VITE_BASE_URL` = `https://your-server-name.vercel.app`
+
+This tells your frontend where to find your backend API when deployed.
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -227,5 +239,5 @@ For support, email support@quickai.com or join our community discussions.
 ---
 
 **QUICKAI** - Empowering creativity with AI 🚀
-
 Live Link: https://quickai-drab.vercel.app/
+
