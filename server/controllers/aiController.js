@@ -240,12 +240,11 @@
 import { GoogleGenAI } from "@google/genai";
 import sql from "../configs/db.js";
 import { clerkClient } from "@clerk/express";
-import axios from "axios";
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import pdf from "pdf-parse/lib/pdf-parse.js";
 
-// Initialize official Google Gen AI Client (works natively with AQ. and AIza keys)
+// Initialize Google Gen AI Client
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const generateArticle = async (req, res) => {
@@ -262,12 +261,14 @@ export const generateArticle = async (req, res) => {
       });
     }
 
+    const targetLength = Number(length) || 800;
+
     const response = await ai.models.generateContent({
       model: "gemini-3.6-flash",
-      contents: prompt,
+      contents: `Write a complete, detailed, and comprehensive article of approximately ${targetLength} words on the following topic:\n\n${prompt}\n\nMake sure the response is well structured with clear headings, detailed paragraphs, and a complete conclusion. Do not truncate or cut off mid-sentence.`,
       config: {
         temperature: 0.7,
-        maxOutputTokens: Number(length) || 1000,
+        maxOutputTokens: 4000,
       },
     });
 
@@ -307,10 +308,10 @@ export const generateBlogTitle = async (req, res) => {
 
     const response = await ai.models.generateContent({
       model: "gemini-3.6-flash",
-      contents: `Generate catchy and engaging blog titles for the following topic: ${prompt}`,
+      contents: `Generate 5 to 10 catchy, click-worthy, and engaging blog titles for the following topic/keyword: ${prompt}. List them as clean bullet points.`,
       config: {
         temperature: 0.7,
-        maxOutputTokens: 150,
+        maxOutputTokens: 500,
       },
     });
 
@@ -347,18 +348,14 @@ export const generateImage = async (req, res) => {
       });
     }
 
-    const formData = new FormData();
-    formData.append("prompt", prompt);
-    const { data } = await axios.post(
-      "https://clipdrop-api.co/text-to-image/v1",
-      formData,
-      {
-        headers: { "x-api-key": process.env.CLIPDROP_API_KEY },
-        responseType: "arraybuffer",
-      }
-    );
-    const base64Image = `data:image/png;base64,${Buffer.from(data, "binary").toString("base64")}`;
-    const { secure_url } = await cloudinary.uploader.upload(base64Image);
+    // High-resolution image generation (100% Free, no credits or API keys required)
+    const encodedPrompt = encodeURIComponent(prompt);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 1000000)}`;
+
+    // Upload to Cloudinary for permanent hosting
+    const { secure_url } = await cloudinary.uploader.upload(imageUrl, {
+      folder: "quickai_images",
+    });
 
     await sql`INSERT INTO creations (user_id, prompt, content, type, publish)
       VALUES(${userId}, ${prompt}, ${secure_url}, 'image', ${publish ?? false})`;
@@ -456,14 +453,21 @@ export const resumeReview = async (req, res) => {
     const dataBuffer = fs.readFileSync(resume.path);
     const pdfData = await pdf(dataBuffer);
 
-    const prompt = `Review the following resume and provide constructive feedback on its strengths, weaknesses, and areas for improvement. Resume content:\n\n${pdfData.text}`;
+    const prompt = `You are an expert technical recruiter and resume reviewer. Analyze the following resume content thoroughly and provide comprehensive, actionable feedback with specific sections:
+1. Executive Summary & Overall Score (out of 10)
+2. Key Strengths
+3. Critical Weaknesses & Missing Metrics/Impact
+4. Actionable Step-by-Step Improvements
+
+Resume Content:
+\n\n${pdfData.text}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3.6-flash",
       contents: prompt,
       config: {
         temperature: 0.7,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 3500,
       },
     });
 
